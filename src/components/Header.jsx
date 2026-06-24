@@ -6,6 +6,7 @@ export function Header() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     
+    // Pega o termo que já possa estar na URL, senão começa vazio
     const [busca, setBusca] = useState(searchParams.get("busca") || "");
     const isLogged = !!localStorage.getItem('token');
     
@@ -14,6 +15,7 @@ export function Header() {
         window.location.href = '/login';
     };
 
+    // Função que envia a busca ao apertar Enter
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
             if (busca.trim()) {
@@ -30,13 +32,12 @@ export function Header() {
 
                 {/* LOGO */}
                 <div className="flex items-center shrink-0">
-                    <Link to="/" className="text-2xl font-black text-blue-500 tracking-tighter cursor-pointer">
+                    <Link to="/" className="text-2xl font-black text-indigo-600 tracking-tighter cursor-pointer">
                         <h1>Smartly</h1>
                     </Link>
                 </div>
 
-                {/* BARRA DE PESQUISA CENTRALIZADA E CORRIGIDA */}
-                {/* mx-auto garante centralização no desktop | min-w-[140px] impede que fique micro no mobile */}
+                {/* BARRA DE PESQUISA CENTRALIZADA */}
                 <div className="flex-1 max-w-md mx-auto min-w-[140px] relative">
                     <input
                         type="text"
@@ -59,12 +60,13 @@ export function Header() {
                         <ShoppingBag size={20} className="md:w-6 md:h-6" />
                     </Link>
 
-                    <button className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    {/* REDIRECIONAMENTO DO CARRINHO */}
+                    <Link to="/carrinho" className="relative p-2 hover:bg-gray-100 rounded-full transition-colors" title="Meu Carrinho">
                         <ShoppingCart size={20} className="text-gray-700 md:w-6 md:h-6" />
                         <span className="absolute top-0 right-0 bg-red-500 text-white text-[9px] md:text-xs font-bold rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center border-2 border-white">
-                            1
+                            2
                         </span>
-                    </button>
+                    </Link>
 
                     {isLogged ? (
                         <button onClick={handleLogout} className="flex items-center gap-2 hover:opacity-80 transition-opacity bg-red-50 px-3 py-1.5 rounded-full" title="Sair">

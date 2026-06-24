@@ -11,27 +11,33 @@ import { Login } from './pages/Login';
 import { Cadastro } from './pages/Cadastro';
 import CheckoutPage from './pages/CheckoutPage';
 
-// [NOVAS IMPORTAÇÕES] Importando as páginas que faltavam
+// Importando as páginas de pedidos e rastreio
 import MeusPedidosPage from './pages/MeusPedidosPage';
-import RastreioPage from './pages/RastreioPage'; // Certifique-se de que o nome do arquivo/pasta bate com este
+import RastreioPage from './pages/RastreioPage'; 
+
+// [NOVA IMPORTAÇÃO] Importando a página de carrinho
+import CarrinhoPage from './pages/CarrinhoPage';
 
 export default function App() {
   return (
-    // O Router precisa estar aqui em cima para o useNavigate funcionar nos componentes abaixo
+    // O Router engloba tudo para que os hooks de navegação funcionem perfeitamente
     <Router>
       <div className="min-h-screen bg-white flex flex-col font-sans">
         <Routes>
           <Route path="/" element={<><Header /><Menu /><Main /></>} />
           <Route path="/produtos" element={<><Header /><Menu /><ProdutosPage /></>} />
           
-          {/* A rota de detalhes agora está dentro do contexto do Router */}
+          {/* Rota de detalhes do produto dinâmico */}
           <Route path="/produto/:id" element={<><Header /><Menu /><ProdutoDetalhePage /></>} />
+          
+          {/* [NOVA ROTA] Adicionando a rota da página de carrinho */}
+          <Route path="/carrinho" element={<><Header /><Menu /><CarrinhoPage /></>} />
           
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/checkout" element={<><Header /><CheckoutPage /></>} />
 
-          {/* [NOVAS ROTAS] Adicionadas aqui para corrigir os erros de navegação */}
+          {/* Rotas de área do cliente e pós-venda */}
           <Route path="/meus-pedidos" element={<><Header /><MeusPedidosPage /></>} />
           <Route path="/rastreio" element={<><Header /><RastreioPage /></>} />
         </Routes>

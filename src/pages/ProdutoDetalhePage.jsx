@@ -151,6 +151,38 @@ export default function ProdutoDetalhePage() {
     (p) => p.categoria === produto.categoria && p.id !== produto.id,
   );
 
+  // FUNÇÃO DE ADICIONAR E SALVAR ITEM NO CARRINHO LOCALSTORAGE REAL
+  const handleAdicionarAoCarrinho = () => {
+    const carrinhoAtual = JSON.parse(localStorage.getItem("carrinho")) || [];
+    
+    // Verifica se esse item específico já está na lista
+    const produtoExistenteIndex = carrinhoAtual.findIndex((item) => item.id === produto.id);
+
+    if (produtoExistenteIndex !== -1) {
+      // Se já existir, soma a nova quantidade
+      carrinhoAtual[produtoExistenteIndex].quantidade += quantidade;
+    } else {
+      // Se não existir, monta a estrutura completa que a tela de Carrinho precisa usar
+      carrinhoAtual.push({
+        id: produto.id,
+        nome: produto.nome,
+        precoAtual: produto.precoAtual,
+        precoOriginal: produto.precoOriginal,
+        imagem: produto.images?.[0] || Cel,
+        quantidade: quantidade
+      });
+    }
+
+    // Salva o array atualizado no localStorage
+    localStorage.setItem("carrinho", JSON.stringify(carrinhoAtual));
+
+    // Dispara o evento global para o Header redesenhar a bolinha vermelha
+    window.dispatchEvent(new Event("storage"));
+
+    // Redireciona para o carrinho
+    navigate("/carrinho");
+  };
+
   return (
     <main className="bg-white min-h-screen text-gray-800">
       {/* Container responsável pelo alinhamento e espaçamento lateral do Figma */}
@@ -288,9 +320,14 @@ export default function ProdutoDetalhePage() {
             </div>
 
             <div className="flex flex-col gap-2 mt-2">
-              <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+              {/* VINCULADO À FUNÇÃO ADICIONAR AO CARRINHO */}
+              <button 
+                onClick={handleAdicionarAoCarrinho}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+              >
                 <ShoppingCart size={14} /> Adicionar ao carrinho
               </button>
+              
               <button
                 onClick={() => {
                   localStorage.setItem(
@@ -344,7 +381,7 @@ export default function ProdutoDetalhePage() {
           </div>
         </section>
 
-        {/* SEÇÃO NOVA: PRODUTOS SEMELHANTES */}
+        {/* SEÇÃO: PRODUTOS SEMELHANTES */}
         {produtosSemelhantes.length > 0 && (
           <section className="border-t border-gray-200 pt-8">
             <div className="mb-5">
@@ -396,7 +433,7 @@ export default function ProdutoDetalhePage() {
           </section>
         )}
 
-        {/* SEÇÃO NOVA: AVALIAÇÕES DE CLIENTES */}
+        {/* SEÇÃO: AVALIAÇÕES DE CLIENTES */}
         <section className="border-t border-gray-200 pt-8 mb-6">
           <h2 className="text-lg font-bold text-gray-900 mb-6">
             Avaliação dos Clientes
