@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, LogOut, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -10,10 +10,27 @@ export function Header() {
     const [busca, setBusca] = useState(searchParams.get("busca") || "");
     const isLogged = !!localStorage.getItem('token');
     
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-    };
+    // Estado dinâmico para controlar o contador da bolinha vermelha
+    const [badgeQtd, setBadgeQtd] = useState(0);
+
+    // Efeito para sincronizar e escutar as alterações de quantidade do carrinho
+    useEffect(() => {
+        const atualizarContadorCarrinho = () => {
+            const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            // Soma a propriedade quantidade de cada item dinamicamente
+            const totalItens = carrinho.reduce((acc, item) => acc + (Number(item.quantidade) || 1), 0);
+            setBadgeQtd(totalItens);
+        };
+
+        // Roda a verificação assim que o Header monta na tela
+        atualizarContadorCarrinho();
+
+        // Escuta atualizações vindas de outras páginas (como o clique de adicionar ou remover)
+        window.addEventListener('storage', atualizarContadorCarrinho);
+        return () => {
+            window.removeEventListener('storage', atualizarContadorCarrinho);
+        };
+    }, []);
 
     // Função que envia a busca ao apertar Enter
     const handleKeyPress = (e) => {
@@ -32,7 +49,7 @@ export function Header() {
 
                 {/* LOGO */}
                 <div className="flex items-center shrink-0">
-                    <Link to="/" className="text-2xl font-black text-indigo-600 tracking-tighter cursor-pointer">
+                    <Link to="/" className="text-2xl font-black text-blue-500 tracking-tighter cursor-pointer">
                         <h1>Smartly</h1>
                     </Link>
                 </div>
@@ -60,12 +77,14 @@ export function Header() {
                         <ShoppingBag size={20} className="md:w-6 md:h-6" />
                     </Link>
 
-                    {/* REDIRECIONAMENTO DO CARRINHO */}
+                    {/* REDIRECIONAMENTO DO CARRINHO COM BADGE REAL E TOTALIZADO */}
                     <Link to="/carrinho" className="relative p-2 hover:bg-gray-100 rounded-full transition-colors" title="Meu Carrinho">
                         <ShoppingCart size={20} className="text-gray-700 md:w-6 md:h-6" />
-                        <span className="absolute top-0 right-0 bg-red-500 text-white text-[9px] md:text-xs font-bold rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center border-2 border-white">
-                            2
-                        </span>
+                        {badgeQtd > 0 && (
+                            <span className="absolute top-0 right-0 bg-red-500 text-white text-[9px] md:text-xs font-bold rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center border-2 border-white">
+                                {badgeQtd}
+                            </span>
+                        )}
                     </Link>
 
                     {isLogged ? (
