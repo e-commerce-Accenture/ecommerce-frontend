@@ -1,0 +1,202 @@
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { CreditCard, Truck, ShoppingBag, ArrowLeft, ShieldCheck } from "lucide-react";
+
+export default function CheckoutPage() {
+  const navigate = useNavigate();
+  const [produto, setProduto] = useState(null);
+  const [quantidade, setQuantidade] = useState(1);
+  const [carregando, setCarregando] = useState(false);
+
+  // Estados do formulário
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [cep, setCep] = useState("");
+  const [endereco, setEndereco] = useState("");
+
+  useEffect(() => {
+    // Recupera o produto selecionado na tela de detalhes
+    const checkoutData = localStorage.getItem("checkout_atual");
+    if (checkoutData) {
+      const data = JSON.parse(checkoutData);
+      setProduto(data.produto);
+      setQuantidade(data.quantidade || 1);
+    }
+  }, []);
+
+  if (!produto) {
+    return (
+      <div className="py-16 text-center flex flex-col items-center gap-4">
+        <p className="text-gray-500 text-sm">Nenhum produto selecionado para checkout.</p>
+        <Link to="/produtos" className="text-xs bg-blue-500 text-white px-4 py-2 rounded-xl font-medium">
+          Ver Produtos
+        </Link>
+      </div>
+    );
+  }
+
+  const total = produto.precoAtual * quantidade;
+
+  const handleFinalizarCompra = (e) => {
+    e.preventDefault();
+    if (!nome || !email || !cep || !endereco) {
+      alert("Por favor, preencha todos os campos da simulação!");
+      return;
+    }
+
+    setCarregando(true);
+
+    // Simula um delay de processamento de pagamento (2 segundos)
+    setTimeout(() => {
+      const numeroPedido = "ORD-" + Math.floor(100000 + Math.random() * 900000);
+      
+      const dadosPedido = {
+        idPedido: numeroPedido,
+        produtoNome: produto.nome,
+        produtoImagem: produto.imagens?.[0] || produto.images?.[0] || produto.imagem,
+        quantidade: quantidade,
+        total: total,
+        clienteNome: nome,
+        endereco: endereco,
+        status: "Processando", // Status inicial da esteira de rastreio
+        dataPedido: new Date().toLocaleDateString('pt-BR')
+      };
+
+      // ─── LÓGICA ATUALIZADA DO HISTÓRICO EM ARRAY ───
+      const historicoAntigo = JSON.parse(localStorage.getItem("historico_pedidos") || "[]");
+      const novoHistorico = [dadosPedido, ...historicoAntigo];
+      localStorage.setItem("historico_pedidos", JSON.stringify(novoHistorico));
+      
+      // Salva de forma isolada também para caso precise ler direto na tela de rastreio imediato
+      localStorage.setItem("ultimo_pedido", JSON.stringify(dadosPedido));
+
+      setCarregando(false);
+      
+      // Redireciona o usuário para a nova tela de histórico de compras
+      navigate("/meus-pedidos");
+    }, 2000);
+  };
+
+  return (
+    <main className="py-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-gray-800">
+      {/* Botão Voltar */}
+      <button 
+        onClick={() => navigate(-1)} 
+        className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 mb-6 transition-colors"
+      >
+        <ArrowLeft size={14} /> Voltar para o produto
+      </button>
+
+      {/* Tag de formulário englobando toda a estrutura para o gatilho de submit funcionar */}
+      <form onSubmit={handleFinalizarCompra} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* FORMULÁRIO (Esquerda) */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          
+          {/* Seção 1: Dados de entrega */}
+          <div className="border border-gray-200 rounded-2xl p-6 bg-white flex flex-col gap-4">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <Truck size={18} className="text-blue-500" /> 1. Dados de Entrega (Simulado)
+            </h2>
+            <div className="flex flex-col gap-3 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-gray-600 text-left">Nome Completo</label>
+                <input required type="text" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: João Silva" className="border border-gray-200 p-2.5 rounded-xl bg-gray-50 focus:outline-blue-500 text-left" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-gray-600 text-left">E-mail para Notificações</label>
+                <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="joao@email.com" className="border border-gray-200 p-2.5 rounded-xl bg-gray-50 focus:outline-blue-500 text-left" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1 col-span-1">
+                  <label className="font-semibold text-gray-600 text-left">CEP</label>
+                  <input required type="text" value={cep} onChange={(e) => setCep(e.target.value)} placeholder="00000-000" className="border border-gray-200 p-2.5 rounded-xl bg-gray-50 focus:outline-blue-500 text-left" />
+                </div>
+                <div className="flex flex-col gap-1 col-span-2">
+                  <label className="font-semibold text-gray-600 text-left">Endereço Completo</label>
+                  <input required type="text" value={endereco} onChange={(e) => setEndereco(e.target.value)} placeholder="Rua, número, bairro e apto" className="border border-gray-200 p-2.5 rounded-xl bg-gray-50 focus:outline-blue-500 text-left" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Seção 2: Método de pagamento */}
+          <div className="border border-gray-200 rounded-2xl p-6 bg-white flex flex-col gap-4">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <CreditCard size={18} className="text-blue-500" /> 2. Forma de Pagamento
+            </h2>
+            <div className="p-4 border-2 border-blue-500 bg-blue-50/40 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-gray-900">Cartão de Crédito Fictício</span>
+                  <span className="text-[10px] text-gray-500">Apenas para fins de demonstração do projeto</span>
+                </div>
+              </div>
+              <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-md">Ativo</span>
+            </div>
+            <p className="text-[11px] text-gray-400 text-left">Nota: Nenhum valor real será cobrado e nenhuma informação sensível de cartão será exigida neste ambiente de homologação e testes.</p>
+          </div>
+        </div>
+
+        {/* RESUMO DA COMPRA (Direita) */}
+        <div className="lg:col-span-5 border border-gray-200 rounded-2xl p-6 bg-gray-50 flex flex-col gap-4 sticky top-6">
+          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <ShoppingBag size={18} className="text-gray-700" /> Resumo do Pedido
+          </h2>
+
+          <div className="flex gap-3 bg-white p-3 border border-gray-100 rounded-xl">
+            <div className="w-16 h-16 bg-gray-50 border rounded-lg p-1 flex items-center justify-center shrink-0">
+              {/* Fallbacks adicionados aqui para evitar que a imagem quebre caso use 'imagens' ou 'images' */}
+              <img 
+                src={produto.imagens?.[0] || produto.images?.[0] || produto.imagem} 
+                alt={produto.nome} 
+                className="max-h-full object-contain" 
+              />
+            </div>
+            <div className="flex flex-col justify-center text-left flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-gray-900 truncate">{produto.nome}</h4>
+              <p className="text-[11px] text-gray-400 mt-0.5">Quantidade: {quantidade}</p>
+            </div>
+            <div className="flex items-center">
+              <span className="text-xs font-bold text-gray-900">${produto.precoAtual.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 pt-2 border-t border-gray-200 text-xs text-gray-600">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>${total.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-green-600 font-medium">
+              <span>Frete</span>
+              <span>Grátis</span>
+            </div>
+            <div className="flex justify-between text-sm font-extrabold text-gray-900 pt-2 border-t border-dashed border-gray-200">
+              <span>Total da Compra</span>
+              <span>${total.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Botão com o tipo 'submit' definido adequadamente */}
+          <button
+            type="submit"
+            disabled={carregando}
+            className={`w-full text-white font-medium text-xs py-3 rounded-xl transition-all shadow-sm mt-2 ${
+              carregando ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+            }`}
+          >
+            {carregando ? "Processando Pagamento..." : "Finalizar Compra Fictícia"}
+          </button>
+
+          <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400 mt-1">
+            <ShieldCheck size={12} /> Prototipagem de interface — Sem transações reais
+          </div>
+        </div>
+
+      </form>
+    </main>
+  );
+}
