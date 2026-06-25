@@ -6,43 +6,49 @@ export function Header() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
-    // Pega o termo que já possa estar na URL, senão começa vazio
     const [busca, setBusca] = useState(searchParams.get("busca") || "");
-    const isLogged = !!localStorage.getItem('token');
 
-    // Verifica se o usuário logado é o administrador global
-    const isAdmin = localStorage.getItem('user_email') === 'admin@smartly.com';
+    // Estado reativo para autenticação
+    const [isLogged, setIsLogged] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     // Estado dinâmico para controlar o contador da bolinha vermelha
     const [badgeQtd, setBadgeQtd] = useState(0);
 
-    // Efeito para sincronizar e escutar as alterações de quantidade do carrinho
     useEffect(() => {
+        const verificarAuth = () => {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('user_role');
+            setIsLogged(!!token);
+            setIsAdmin(role === 'admin');
+        };
+
         const atualizarContadorCarrinho = () => {
             const carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
-            // Soma a propriedade quantidade de cada item dinamicamente
             const totalItens = carrinho.reduce((acc, item) => acc + (Number(item.quantidade) || 1), 0);
             setBadgeQtd(totalItens);
         };
 
-        // Roda a verificação assim que o Header monta na tela
+        verificarAuth();
         atualizarContadorCarrinho();
 
-        // Escuta atualizações vindas de outras páginas (como o clique de adicionar ou remover)
-        window.addEventListener('storage', atualizarContadorCarrinho);
-        return () => {
-            window.removeEventListener('storage', atualizarContadorCarrinho);
+        const handleAuthChange = () => {
+            verificarAuth();
+            atualizarContadorCarrinho();
         };
+
+        window.addEventListener('authChange', handleAuthChange);
+        return () => window.removeEventListener('authChange', handleAuthChange);
     }, []);
 
-    // Função para deslogar o usuário limpando as credenciais locais
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user_email');
+        localStorage.removeItem('user_role');
+        window.dispatchEvent(new CustomEvent('authChange'));
         navigate('/login');
     };
 
-    // Função que envia a busca ao apertar Enter
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
             if (busca.trim()) {
@@ -96,14 +102,14 @@ export function Header() {
                         <ShoppingBag size={20} className="md:w-6 md:h-6" />
                     </Link>
 
-                    {/* Botão de Perfil que criei */}
+                    {/* Botão de Perfil (apenas para usuários logados) */}
                     {isLogged && (
                         <Link to="/perfil" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700" title="Meu Perfil">
                             <UserCog size={20} className="md:w-6 md:h-6" />
                         </Link>
                     )}
 
-                    {/* REDIRECIONAMENTO DO CARRINHO COM BADGE REAL E TOTALIZADO */}
+                    {/* CARRINHO COM BADGE */}
                     <Link to="/carrinho" className="relative p-2 hover:bg-gray-100 rounded-full transition-colors" title="Meu Carrinho">
                         <ShoppingCart size={20} className="text-gray-700 md:w-6 md:h-6" />
                         {badgeQtd > 0 && (

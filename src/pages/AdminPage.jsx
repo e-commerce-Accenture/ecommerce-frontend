@@ -36,9 +36,10 @@ export default function AdminPage() {
     const [promosInput, setPromosInput] = useState({ p1: '', p2: '', p3: '', p4: '', p5: '' });
 
     useEffect(() => {
-        const userEmail = localStorage.getItem('user_email') || '';
         const token = localStorage.getItem('token');
-        if (!token || userEmail !== 'admin@smartly.com') {
+        const role = localStorage.getItem('user_role');
+
+        if (!token || role !== 'admin') {
             alert('Acesso negado. Apenas administradores podem acessar esta página.');
             navigate('/');
             return;
