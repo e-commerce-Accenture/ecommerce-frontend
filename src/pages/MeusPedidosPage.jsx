@@ -7,7 +7,6 @@ export default function MeusPedidosPage() {
   const [pedidos, setPedidos] = useState([]);
 
   useEffect(() => {
-    // Busca a lista de todos os pedidos já feitos
     const historico = localStorage.getItem("historico_pedidos");
     if (historico) {
       setPedidos(JSON.parse(historico));
@@ -15,7 +14,6 @@ export default function MeusPedidosPage() {
   }, []);
 
   const verRastreio = (pedido) => {
-    // Define qual pedido queremos rastrear antes de ir para a tela de rastreio
     localStorage.setItem("ultimo_pedido", JSON.stringify(pedido));
     navigate("/rastreio");
   };
@@ -41,7 +39,6 @@ export default function MeusPedidosPage() {
         <div className="flex flex-col gap-4">
           {pedidos.map((pedido) => (
             <div key={pedido.idPedido} className="border border-gray-200 rounded-2xl p-4 bg-white hover:border-gray-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              {/* Info Produto */}
               <div className="flex gap-4 items-center">
                 <div className="w-14 h-14 bg-gray-50 border rounded-xl p-1 flex items-center justify-center shrink-0">
                   <img src={pedido.produtoImagem} alt={pedido.produtoNome} className="max-h-full object-contain" />
@@ -53,7 +50,6 @@ export default function MeusPedidosPage() {
                 </div>
               </div>
 
-              {/* Status e Botão */}
               <div className="flex items-center justify-between sm:justify-end gap-6 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100">
                 <div className="flex flex-col sm:text-right">
                   <span className="text-[10px] text-gray-400 font-medium">Total</span>

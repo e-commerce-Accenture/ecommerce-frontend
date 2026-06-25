@@ -6,22 +6,17 @@ export default function CarrinhoPage() {
   const navigate = useNavigate();
   const [itensCarrinho, setItensCarrinho] = useState([]);
 
-  // 1. Carrega os dados reais do localStorage assim que a página abre
   useEffect(() => {
     const dadosSalvos = JSON.parse(localStorage.getItem("carrinho")) || [];
     setItensCarrinho(dadosSalvos);
   }, []);
 
-  // Auxiliar para salvar as alterações e disparar o evento de atualização para o Header
   const salvarEAtualizar = (novoCarrinho) => {
     setItensCarrinho(novoCarrinho);
     localStorage.setItem("carrinho", JSON.stringify(novoCarrinho));
-    
-    // Dispara o evento para avisar o Header para atualizar a bolinha vermelha na hora
     window.dispatchEvent(new Event("storage"));
   };
 
-  // Altera a quantidade de itens salvando no localStorage
   const alterarQuantidade = (id, tipo) => {
     const novoCarrinho = itensCarrinho.map((item) => {
       if (item.id === id) {
@@ -33,19 +28,16 @@ export default function CarrinhoPage() {
     salvarEAtualizar(novoCarrinho);
   };
 
-  // Remove o item do carrinho e limpa do localStorage
   const removerItem = (id) => {
     const novoCarrinho = itensCarrinho.filter((item) => item.id !== id);
     salvarEAtualizar(novoCarrinho);
   };
 
-  // Cálculos matemáticos dos totais com base no estado dinâmico
-  const subtotalOriginal = itensCarrinho.reduce((acc, item) => acc + item.precoOriginal * item.quantidade, 0);
-  const subtotalAtual = itensCarrinho.reduce((acc, item) => acc + item.precoAtual * item.quantidade, 0);
+  const subtotalOriginal = itensCarrinho.reduce((acc, item) => acc + (Number(item.precoOriginal) || 0) * item.quantidade, 0);
+  const subtotalAtual = itensCarrinho.reduce((acc, item) => acc + (Number(item.precoAtual) || 0) * item.quantidade, 0);
   const totalDesconto = subtotalOriginal - subtotalAtual;
-  const valorFrete = subtotalAtual > 20000 ? 0 : 1990; // Frete grátis acima de $20.000
+  const valorFrete = subtotalAtual > 20000 ? 0 : 1990;
 
-  // Estado de tela vazia quando não há itens
   if (itensCarrinho.length === 0) {
     return (
       <main className="min-h-[70vh] flex flex-col items-center justify-center bg-white px-4">
@@ -70,8 +62,6 @@ export default function CarrinhoPage() {
 
   return (
     <main className="py-6 md:py-10 bg-white text-gray-800 font-sans w-full max-w-[1440px] mx-auto overflow-x-hidden px-6 md:px-16 box-border">
-      
-      {/* Botão Voltar */}
       <div className="mb-6">
         <Link to="/produtos" className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors">
           <ArrowLeft size={14} />
@@ -81,17 +71,13 @@ export default function CarrinhoPage() {
 
       <h1 className="text-2xl font-black text-gray-900 tracking-tight text-left mb-8">Meu Carrinho</h1>
 
-      {/* Grid do Carrinho */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start w-full">
-        
-        {/* LISTA DE PRODUTOS DINÂMICOS */}
         <div className="flex flex-col gap-4 w-full">
           {itensCarrinho.map((item) => (
             <div
               key={item.id}
               className="flex flex-col sm:flex-row items-center sm:justify-between bg-gray-50/50 p-4 rounded-2xl border border-gray-100 gap-4 text-left w-full"
             >
-              {/* Imagem e Detalhes */}
               <div className="flex items-center gap-4 w-full sm:w-auto">
                 <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center p-2 border border-gray-100 shrink-0 mix-blend-multiply">
                   <img src={item.imagem} alt={item.nome} className="max-h-full max-w-full object-contain" />
@@ -99,15 +85,14 @@ export default function CarrinhoPage() {
                 <div className="flex flex-col gap-1">
                   <h3 className="text-sm font-bold text-gray-900 line-clamp-1">{item.nome}</h3>
                   <p className="text-[10px] text-gray-400 line-through">
-                    ${item.precoOriginal.toLocaleString("pt-BR")}
+                    ${(Number(item.precoOriginal) || 0).toLocaleString("pt-BR")}
                   </p>
                   <p className="text-sm font-black text-gray-900">
-                    ${item.precoAtual.toLocaleString("pt-BR")}
+                    ${(Number(item.precoAtual) || 0).toLocaleString("pt-BR")}
                   </p>
                 </div>
               </div>
 
-              {/* Controles de Quantidade e Preço Final */}
               <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t sm:border-none pt-3 sm:pt-0">
                 <div className="flex items-center bg-white border border-gray-200 rounded-full p-1 shadow-sm">
                   <button
@@ -127,7 +112,7 @@ export default function CarrinhoPage() {
 
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-black text-gray-900 min-w-[70px] text-right">
-                    ${(item.precoAtual * item.quantidade).toLocaleString("pt-BR")}
+                    ${((Number(item.precoAtual) || 0) * item.quantidade).toLocaleString("pt-BR")}
                   </span>
                   <button
                     onClick={() => removerItem(item.id)}
@@ -141,7 +126,6 @@ export default function CarrinhoPage() {
           ))}
         </div>
 
-        {/* RESUMO DE VALORES */}
         <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 text-left w-full sticky top-24">
           <h2 className="text-base font-bold text-gray-900 pb-3 border-b border-gray-200 mb-4">
             Resumo do Pedido
@@ -171,7 +155,19 @@ export default function CarrinhoPage() {
           </div>
 
           <button
-            onClick={() => navigate("/checkout")}
+            onClick={() => {
+              // Se o checkout lê de 'checkout_atual', preparamos a chave com a lista ou o resumo apropriado para prosseguir
+              const dadosCheckout = {
+                produto: {
+                  nome: itensCarrinho.length === 1 ? itensCarrinho[0].nome : "Vários Itens",
+                  precoAtual: subtotalAtual,
+                  imagem: itensCarrinho[0].imagem
+                },
+                quantidade: 1
+              };
+              localStorage.setItem("checkout_atual", JSON.stringify(dadosCheckout));
+              navigate("/checkout");
+            }}
             className="w-full bg-indigo-600 text-white text-sm font-bold py-3.5 px-4 rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 mb-3"
           >
             Finalizar Compra
@@ -184,7 +180,6 @@ export default function CarrinhoPage() {
             Adicionar mais produtos
           </Link>
         </div>
-
       </div>
     </main>
   );

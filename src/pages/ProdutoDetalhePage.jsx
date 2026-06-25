@@ -1,539 +1,344 @@
 import { useState, useEffect } from "react";
-import {
-  ChevronRight,
-  Star,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  Check,
-  ShoppingCart,
-  ThumbsUp,
-} from "lucide-react";
+import { ChevronRight, Star, ShoppingCart, ThumbsUp, XCircle } from "lucide-react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 
-// Imports de imagens para o mock de dados funcionar idêntico à listagem
-import Cel from "../assets/produtos/image-1.png";
-import Cel2 from "../assets/produtos/image-2.png";
-import Cel3 from "../assets/produtos/image-3.png";
-import Cel4 from "../assets/produtos/image-4.png";
-import Cel5 from "../assets/produtos/image-5.png";
-
-// Banco de dados simulado expandido para alimentar os filtros de semelhantes
-const bancoDeProdutos = [
-  {
-    id: 1,
-    nome: "Galaxy S22 Ultra 5G",
-    marca: "Samsung",
-    precoAtual: 32999,
-    precoOriginal: 74999,
-    desconto: 56,
-    categoria: "Samsung",
-    images: [Cel, Cel2, Cel3],
-    descricao:
-      "Explore novas possibilidades com o Galaxy S22 Ultra. Equipado com a lendária S Pen embutida, câmeras de nível profissional com Nightography e a eficiência absurda do processador Snapdragon de última geração.",
-    especificacoes: {
-      Marca: "Samsung",
-      Modelo: "Galaxy S22 Ultra",
-      "Memória Interna": "256 GB",
-      "Memória RAM": "12 GB",
-      Bateria: "5.000 mAh",
-      Conectividade: "5G, Wi-Fi 6E, Bluetooth 5.2",
-    },
-  },
-  {
-    id: 2,
-    nome: "Galaxy M13 4GB | 64GB",
-    marca: "Samsung",
-    precoAtual: 10499,
-    precoOriginal: 14999,
-    desconto: 56,
-    categoria: "Samsung",
-    images: [Cel2, Cel, Cel3],
-    descricao:
-      "O Galaxy M13 combina estilo contemporâneo com desempenho confiável para o seu dia a dia. Tela fluida e bateria de longa duração para você não parar nunca.",
-    especificacoes: {
-      Marca: "Samsung",
-      "Memória Interna": "64 GB",
-      "Memória RAM": "4 GB",
-    },
-  },
-  {
-    id: 3,
-    nome: "iPhone 14 Pro Max",
-    precoAtual: 69999,
-    precoOriginal: 89999,
-    desconto: 22,
-    categoria: "Apple",
-    images: [Cel3, Cel2, Cel],
-    descricao:
-      "iPhone 14 Pro Max. Capture detalhes inacreditáveis com uma câmera de 48 MP. Experimente o iPhone de um jeito totalmente novo com a Dynamic Island e a tela Sempre Ativa.",
-    especificacoes: {
-      Marca: "Apple",
-      Modelo: "iPhone 14 Pro Max",
-      "Memória Interna": "128 GB",
-    },
-  },
-  {
-    id: 4,
-    nome: "Apple Watch Series 9",
-    precoAtual: 31999,
-    precoOriginal: 40999,
-    desconto: 56,
-    categoria: "Apple Watch",
-    images: [Cel4, Cel5],
-    descricao:
-      "O Apple Watch Series 9 ajuda você a ficar mais conectado, ativo, saudável e seguro. Apresentando o gesto de toque duplo, uma maneira mágica de usar o Apple Watch.",
-    especificacoes: { Marca: "Apple", Conectividade: "GPS", Tamanho: "45mm" },
-  },
-  {
-    id: 5,
-    nome: "Galaxy Watch 6 BT",
-    precoAtual: 17999,
-    precoOriginal: 24999,
-    desconto: 28,
-    categoria: "Samsung Watch",
-    images: [Cel5, Cel4],
-    descricao:
-      "Monitore sua saúde de dia e de noite. O Galaxy Watch 6 traz um design elegante com uma tela maior, além de insights personalizados de sono e composição corporal.",
-    especificacoes: {
-      Marca: "Samsung",
-      Tamanho: "44mm",
-      Conectividade: "Bluetooth",
-    },
-  },
-];
-
-// Mock de Avaliações Fakes bem estruturado
-const avaliacoesFakes = [
-  {
-    id: 1,
-    usuario: "Carlos Henrique Silva",
-    inicial: "CH",
-    nota: 5,
-    data: "14 de Maio de 2026",
-    titulo: "Excelente custo-benefício e entrega rápida!",
-    comentario:
-      "Produto sensacional, chegou muito antes do prazo estipulado. A bateria dura o dia todo com uso moderado e a tela tem uma fluidez absurda. Recomendo demais!",
-    util: 34,
-  },
-  {
-    id: 2,
-    usuario: "Mariana Souza Costa",
-    inicial: "MS",
-    nota: 4,
-    data: "28 de Abril de 2026",
-    titulo: "Muito bom, mas a caixa veio um pouco amassada",
-    comentario:
-      "O aparelho em si é impecável, design lindo e câmeras maravilhosas. Só tirei uma estrela porque a transportadora amassou um pouco o canto da caixa do produto, mas por dentro estava tudo perfeitamente protegido.",
-    util: 12,
-  },
-];
+import ImgGalaxyS22 from "../assets/produtos/image-1.png"; 
 
 export default function ProdutoDetalhePage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const produto =
-    bancoDeProdutos.find((p) => p.id === Number(id)) || bancoDeProdutos[0];
-
-  const [fotoAtiva, setFotoAtiva] = useState(produto.images?.[0] || Cel);
+  const [produto, setProduto] = useState(null);
+  const [imagemAtiva, setImagemAtiva] = useState("");
   const [quantidade, setQuantidade] = useState(1);
 
-  // Efeito para resetar a foto principal sempre que o usuário mudar de produto
   useEffect(() => {
-    if (produto && produto.images) {
-      setFotoAtiva(produto.images[0]);
-    }
-  }, [id, produto]);
+    const carregarProduto = () => {
+      const bancoGeral = JSON.parse(localStorage.getItem('banco_produtos')) || [];
+      const itemEncontrado = bancoGeral.find((p) => p.id === Number(id));
 
-  // Filtra produtos semelhantes (Mesma categoria, ignorando o próprio produto atual)
-  const produtosSemelhantes = bancoDeProdutos.filter(
-    (p) => p.categoria === produto.categoria && p.id !== produto.id,
-  );
+      if (itemEncontrado) {
+        setProduto(itemEncontrado);
+        setImagemAtiva(itemEncontrado.imagem || ImgGalaxyS22);
+      } else {
+        setProduto(null);
+      }
+    };
 
-  // FUNÇÃO DE ADICIONAR E SALVAR ITEM NO CARRINHO LOCALSTORAGE REAL
-  const handleAdicionarAoCarrinho = () => {
+    carregarProduto();
+    window.addEventListener('storage', carregarProduto);
+    return () => window.removeEventListener('storage', carregarProduto);
+  }, [id]);
+
+  // Função base para injetar o item com segurança no localStorage
+  const salvarNoCarrinhoLocal = () => {
+    if (!produto || produto.estoque <= 0) return false;
+
     const carrinhoAtual = JSON.parse(localStorage.getItem("carrinho")) || [];
-    
-    // Verifica se esse item específico já está na lista
-    const produtoExistenteIndex = carrinhoAtual.findIndex((item) => item.id === produto.id);
+    const itemExistente = carrinhoAtual.find((c) => c.id === produto.id);
 
-    if (produtoExistenteIndex !== -1) {
-      // Se já existir, soma a nova quantidade
-      carrinhoAtual[produtoExistenteIndex].quantidade += quantidade;
+    if (itemExistente) {
+      itemExistente.quantidade = (Number(itemExistente.quantidade) || 0) + Number(quantidade);
     } else {
-      // Se não existir, monta a estrutura completa que a tela de Carrinho precisa usar
       carrinhoAtual.push({
         id: produto.id,
-        nome: produto.nome,
-        precoAtual: produto.precoAtual,
-        precoOriginal: produto.precoOriginal,
-        imagem: produto.images?.[0] || Cel,
-        quantidade: quantidade
+        nome: produto.nome || "Produto",
+        precoAtual: Number(produto.precoAtual) || 0,
+        precoOriginal: Number(produto.precoOriginal) || Number(produto.precoAtual) || 0,
+        imagem: produto.imagem || "",
+        quantidade: Number(quantidade)
       });
     }
 
-    // Salva o array atualizado no localStorage
     localStorage.setItem("carrinho", JSON.stringify(carrinhoAtual));
+    
+    // Dispara o evento de atualização global de forma assíncrona para não travar a navegação do React Router
+    setTimeout(() => {
+      window.dispatchEvent(new Event("storage"));
+    }, 10);
 
-    // Dispara o evento global para o Header redesenhar a bolinha vermelha
-    window.dispatchEvent(new Event("storage"));
-
-    // Redireciona para o carrinho
-    navigate("/carrinho");
+    return true;
   };
 
+  // 1 e 2. Adiciona e leva para a listagem do carrinho com segurança
+  const handleAdicionarAoCarrinho = () => {
+    const sucesso = salvarNoCarrinhoLocal();
+    if (sucesso) {
+      navigate("/carrinho");
+    }
+  };
+
+  // 3. FIX: Adiciona o item na chave correta que o Checkout espera ler ("checkout_atual")
+  const handleComprarAgora = () => {
+    if (!produto || produto.estoque <= 0) return;
+
+    const dadosCheckout = {
+      produto: {
+        id: produto.id,
+        nome: produto.nome || "Produto",
+        precoAtual: Number(produto.precoAtual) || 0,
+        precoOriginal: Number(produto.precoOriginal) || Number(produto.precoAtual) || 0,
+        imagem: produto.imagem || ""
+      },
+      quantidade: Number(quantidade)
+    };
+
+    localStorage.setItem("checkout_atual", JSON.stringify(dadosCheckout));
+    navigate("/checkout");
+  };
+
+  if (!produto) {
+    return (
+      <div className="max-w-xl mx-auto py-24 px-4 text-center">
+        <XCircle size={48} className="text-red-500 mx-auto mb-3" />
+        <h2 className="text-lg font-bold text-gray-900">Produto indisponível</h2>
+        <Link to="/produtos" className="mt-4 inline-block text-xs font-bold text-blue-500 hover:underline">Voltar à lista</Link>
+      </div>
+    );
+  }
+
   return (
-    <main className="bg-white min-h-screen text-gray-800">
-      {/* Container responsável pelo alinhamento e espaçamento lateral do Figma */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 font-sans text-gray-800 box-border w-full">
+      
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-500 mb-6 overflow-x-auto whitespace-nowrap py-1">
+        <Link to="/" className="hover:text-blue-500 font-medium">Home</Link>
+        <ChevronRight size={12} className="shrink-0 text-gray-400" />
+        <Link to="/produtos" className="hover:text-blue-500 font-medium">Produtos</Link>
+        <ChevronRight size={12} className="shrink-0 text-gray-400" />
+        <span className="text-gray-900 font-semibold truncate max-w-[180px]">{produto.nome}</span>
+      </div>
+
+      {/* Grid Duas Colunas Principal */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mb-12 text-left">
         
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Link to="/" className="hover:text-blue-500 transition-colors">
-            Home
-          </Link>
-          <ChevronRight size={14} />
-          <Link to="/produtos" className="hover:text-blue-500 transition-colors">
-            Produtos
-          </Link>
-          <ChevronRight size={14} />
-          <span className="text-gray-800 font-medium line-clamp-1">
-            {produto.nome}
-          </span>
-        </div>
+        {/* Lado Esquerdo: Imagem Gigante */}
+        <div className="lg:col-span-6 grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-2 order-2 md:order-1 flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible">
+            <button className="w-14 h-16 shrink-0 border rounded-xl p-1.5 flex items-center justify-center bg-white border-blue-500 ring-2 ring-blue-100">
+              <img src={produto.imagem} alt="" className="max-h-full max-w-full object-contain" />
+            </button>
+          </div>
 
-        {/* Grid de Informações Principais */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* COLUNA 1: Galeria de Imagens */}
-          <div className="lg:col-span-5 flex flex-col-reverse md:flex-row gap-4">
-            <div className="flex md:flex-col gap-2 shrink-0">
-              {produto.images?.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={() => setFotoAtiva(img)}
-                  className={`w-16 h-20 border rounded-lg p-2 bg-gray-50 flex items-center justify-center transition-all ${
-                    fotoAtiva === img
-                      ? "border-blue-500 ring-2 ring-blue-500/10"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  <img
-                    src={img}
-                    alt={`Miniatura ${index}`}
-                    className="max-h-full object-contain"
-                  />
-                </button>
-              ))}
-            </div>
-
-            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl p-6 flex items-center justify-center min-h-[350px] md:min-h-[450px] relative">
-              <span className="absolute top-4 left-4 bg-blue-500 text-white text-xs font-bold px-2.5 py-1 rounded-md">
+          <div className="md:col-span-10 order-1 md:order-2 aspect-square bg-gray-50/50 rounded-2xl border border-gray-200 p-8 flex items-center justify-center relative overflow-hidden">
+            {produto.desconto > 0 && (
+              <span className="absolute top-4 left-4 bg-blue-500 text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-wider">
                 {produto.desconto}% OFF
               </span>
-              <img
-                src={fotoAtiva}
-                alt={produto.nome}
-                className="w-64 h-80 object-contain mix-blend-multiply"
-              />
+            )}
+            <img src={imagemAtiva} alt={produto.nome} className="max-h-[90%] max-w-[90%] object-contain" />
+          </div>
+        </div>
+
+        {/* Lado Direito: Informações e Compra */}
+        <div className="lg:col-span-6 flex flex-col gap-5">
+          <div>
+            <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+              {produto.marca || "Samsung"}
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 mt-2 tracking-tight leading-tight">
+              {produto.nome}
+            </h1>
+            
+            <div className="flex items-center gap-1.5 mt-2">
+              <div className="flex items-center gap-0.5 text-amber-500">
+                {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
+              </div>
+              <span className="text-xs text-blue-500 font-semibold hover:underline cursor-pointer">1.420 avaliações</span>
             </div>
           </div>
 
-          {/* COLUNA 2: Título e Detalhes Centrais */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
-            <div>
-              <span className="text-xs font-bold text-blue-500 uppercase tracking-wider">
-                {produto.marca}
-              </span>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mt-1">
-                {produto.nome}
-              </h1>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="flex items-center text-amber-500">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={16} fill="currentColor" />
-                ))}
-              </div>
-              <span className="text-xs font-medium text-blue-600 hover:underline cursor-pointer">
-                1.420 avaliações
-              </span>
-            </div>
-
-            <hr className="border-gray-200" />
-
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-400 line-through">
-                De: ${produto.precoOriginal.toLocaleString()}
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-gray-900">
-                  ${produto.precoAtual.toLocaleString()}
-                </span>
-                <span className="text-sm font-semibold text-green-600">
-                  Economize $
-                  {(produto.precoOriginal - produto.precoAtual).toLocaleString()}
-                </span>
-              </div>
-              <p className="text-xs text-gray-500">
-                Em até 10x sem juros no cartão de crédito.
-              </p>
-            </div>
-
-            <hr className="border-gray-200" />
-
-            <div className="flex flex-col gap-1.5">
-              <h3 className="font-semibold text-sm text-gray-900">
-                Sobre este item
-              </h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                {produto.descricao}
-              </p>
-            </div>
-          </div>
-
-          {/* COLUNA 3: Caixa de Compra Lateral */}
-          <div className="lg:col-span-3 p-5 border border-gray-200 rounded-2xl bg-gray-50 flex flex-col gap-4 sticky top-6">
+          {/* Bloco Cinza de Preço */}
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-col gap-0.5">
-              <span className="text-2xl font-bold text-gray-900">
-                ${produto.precoAtual.toLocaleString()}
-              </span>
-              <span className="text-xs text-green-600 font-medium flex items-center gap-1">
-                <Check size={14} /> Em estoque
-              </span>
+              {Number(produto.precoOriginal) > Number(produto.precoAtual) && (
+                <span className="text-xs text-gray-400 line-through font-medium">De: ${Number(produto.precoOriginal || 0).toLocaleString()}</span>
+              )}
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-gray-950">${Number(produto.precoAtual || 0).toLocaleString()}</span>
+                {Number(produto.precoOriginal) > Number(produto.precoAtual) && (
+                  <span className="text-[11px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
+                    Economize ${(Number(produto.precoOriginal || 0) - Number(produto.precoAtual || 0).toLocaleString())}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-gray-400 font-medium">ou em até 10x sem juros no cartão</span>
             </div>
 
-            <div className="flex items-center justify-between text-xs border border-gray-300 rounded-lg p-2 bg-white">
-              <span className="text-gray-500">Quantidade:</span>
-              <select
-                value={quantidade}
-                onChange={(e) => setQuantidade(Number(e.target.value))}
-                className="font-semibold bg-transparent focus:outline-none cursor-pointer"
-              >
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col gap-1.5 min-w-[120px]">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500 font-medium">Estoque:</span>
+                <span className={`font-bold ${produto.estoque > 0 ? "text-green-600" : "text-red-500"}`}>
+                  {produto.estoque > 0 ? `${produto.estoque} un` : "Esgotado"}
+                </span>
+              </div>
+              {produto.estoque > 0 && (
+                <select 
+                  value={quantidade} 
+                  onChange={(e) => setQuantidade(Number(e.target.value))}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold outline-none cursor-pointer"
+                >
+                  {[...Array(Math.min(10, produto.estoque))].map((_, i) => (
+                    <option key={i+1} value={i+1}>Qtd: {i+1}</option>
+                  ))}
+                </select>
+              )}
             </div>
+          </div>
 
-            <div className="flex flex-col gap-2 mt-2">
-              {/* VINCULADO À FUNÇÃO ADICIONAR AO CARRINHO */}
+          {/* Botões */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <button
+              onClick={handleAdicionarAoCarrinho}
+              disabled={produto.estoque <= 0}
+              className={`flex-1 font-bold text-xs py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all border cursor-pointer ${
+                produto.estoque > 0 
+                  ? "bg-white hover:bg-gray-50 text-gray-800 border-gray-300" 
+                  : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+              }`}
+            >
+              <ShoppingCart size={14} />
+              <span>Adicionar ao carrinho</span>
+            </button>
+            
+            {produto.estoque > 0 && (
               <button 
-                onClick={handleAdicionarAoCarrinho}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
-              >
-                <ShoppingCart size={14} /> Adicionar ao carrinho
-              </button>
-              
-              <button
-                onClick={() => {
-                  localStorage.setItem(
-                    "checkout_atual",
-                    JSON.stringify({ produto, quantidade }),
-                  );
-                  navigate("/checkout");
-                }}
-                className="w-full bg-gray-900 hover:bg-black text-white font-medium text-xs py-3 rounded-xl transition-all shadow-sm"
+                onClick={handleComprarAgora} 
+                className="flex-1 bg-gray-950 hover:bg-black text-white font-bold text-xs py-3.5 rounded-xl transition-all text-center cursor-pointer"
               >
                 Comprar agora
               </button>
-            </div>
+            )}
+          </div>
 
-            <div className="flex flex-col gap-2.5 pt-2 text-[11px] text-gray-600 border-t border-gray-200 mt-2">
-              <div className="flex gap-2">
-                <Truck size={14} className="text-gray-400 shrink-0" />
-                <p>Frete Grátis disponível para a sua região.</p>
-              </div>
-              <div className="flex gap-2">
-                <RotateCcw size={14} className="text-gray-400 shrink-0" />
-                <p>Devolução grátis em até 7 dias após o recebimento.</p>
-              </div>
-              <div className="flex gap-2">
-                <ShieldCheck size={14} className="text-gray-400 shrink-0" />
-                <p>Garantia oficial do fabricante incluída.</p>
+          <div className="pt-2">
+            <h4 className="text-xs font-black text-gray-900 mb-1.5 uppercase tracking-wider">Sobre este item</h4>
+            <p className="text-xs text-gray-600 leading-relaxed font-medium">
+              {produto.descricao || "Explore novas possibilidades com o seu dispositivo avançado de última geração."}
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Tabela de Especificações Técnicas */}
+      <section className="border-t border-gray-200 pt-8 mb-8 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-3 max-w-4xl">
+          {[
+            {"label": "Marca", "val": produto.marca || "Samsung"},
+            {"label": "Modelo", "val": produto.nome},
+            {"label": "Memória Interna", "val": "256 GB"},
+            {"label": "Memória RAM", "val": "12 GB"},
+            {"label": "Bateria", "val": "5.000 mAh"},
+            {"label": "Conectividade", "val": "5G, Wi-Fi 6E, Bluetooth 5.2"}
+          ].map((item, idx) => (
+            <div key={idx} className="flex border-b border-gray-100 py-2 text-xs">
+              <span className="w-1/3 text-gray-400 font-medium">{item.label}</span>
+              <span className="w-2/3 text-gray-900 font-bold">{item.val}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Produtos Semelhantes */}
+      <section className="border-t border-gray-200 pt-8 mb-12 text-left">
+        <h3 className="text-base font-black text-gray-900 mb-1">
+          Produtos <span className="text-blue-500">Semelhantes</span>
+        </h3>
+        <p className="text-[11px] font-medium text-gray-400 mb-4">Baseado no item que você está visualizando</p>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white p-3 flex flex-col gap-2 max-w-[240px]">
+            <div className="h-32 bg-gray-50/50 rounded-xl p-2 flex items-center justify-center relative">
+              <span className="absolute top-1.5 left-1.5 bg-blue-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                56% OFF
+              </span>
+              <img src={produto.imagem || ImgGalaxyS22} alt="" className="max-h-full max-w-full object-contain" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-gray-800 line-clamp-1">Galaxy M13 4GB | 64GB</p>
+              <div className="flex items-baseline gap-1 mt-1">
+                <p className="text-xs font-black text-gray-900">$10.499</p>
+                <p className="text-[9px] text-gray-400 line-through">$14.999</p>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Seção: Especificações Técnicas */}
-        <section className="border-t border-gray-200 pt-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
-            Especificações do Produto
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 max-w-3xl">
-            {Object.entries(produto.especificacoes || {}).map(
-              ([chave, valor]) => (
-                <div
-                  key={chave}
-                  className="flex border-b border-gray-100 py-2.5 text-xs"
-                >
-                  <span className="w-1/3 text-gray-400 font-medium">{chave}</span>
-                  <span className="w-2/3 text-gray-800 font-semibold">
-                    {valor}
-                  </span>
+      {/* Avaliação dos Clientes */}
+      <section className="border-t border-gray-200 pt-8 text-left">
+        <h3 className="text-base font-black text-gray-900 mb-6">Avaliação dos Clientes</h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-4 bg-gray-50/50 border border-gray-100 p-5 rounded-2xl flex flex-col gap-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-black text-gray-950">4.8</span>
+              <div className="flex flex-col gap-0.5">
+                <div className="flex text-amber-500">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
                 </div>
-              ),
-            )}
-          </div>
-        </section>
-
-        {/* SEÇÃO: PRODUTOS SEMELHANTES */}
-        {produtosSemelhantes.length > 0 && (
-          <section className="border-t border-gray-200 pt-8">
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-gray-900">
-                Produtos <span className="text-blue-500">Semelhantes</span>
-              </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Baseado no item que você está visualizando
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {produtosSemelhantes.map((item) => (
-                <Link
-                  to={`/produto/${item.id}`}
-                  className="flex flex-col h-full group"
-                  key={item.id}
-                >
-                  <div className="w-full h-full bg-gray-50 rounded-xl border border-gray-200 flex flex-col items-center relative overflow-hidden transition-all group-hover:shadow-md group-hover:border-blue-200">
-                    <span className="absolute top-2 right-2 bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-md z-10">
-                      {item.desconto}% OFF
-                    </span>
-
-                    <div className="p-4 flex-1 flex items-center justify-center">
-                      <img
-                        src={item.images?.[0]}
-                        alt={item.nome}
-                        className="w-20 h-28 object-contain transition-transform duration-300 group-hover:scale-105 mix-blend-multiply"
-                      />
-                    </div>
-
-                    <div className="bg-white w-full p-3 flex flex-col justify-between gap-3 border-t border-gray-100 rounded-b-xl">
-                      <p className="text-xs font-medium text-gray-800 line-clamp-1 text-left">
-                        {item.nome}
-                      </p>
-                      <div className="flex flex-col gap-0.5">
-                        <p className="text-sm font-bold text-gray-900 text-left">
-                          ${item.precoAtual.toLocaleString()}{" "}
-                          <span className="text-[10px] text-gray-400 line-through font-normal">
-                            ${item.precoOriginal.toLocaleString()}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* SEÇÃO: AVALIAÇÕES DE CLIENTES */}
-        <section className="border-t border-gray-200 pt-8 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">
-            Avaliação dos Clientes
-          </h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Resumo Estatístico Lateral */}
-            <div className="lg:col-span-4 bg-gray-50 border border-gray-200 rounded-2xl p-5 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl font-extrabold text-gray-900">4.8</span>
-                <div className="flex flex-col">
-                  <div className="flex text-amber-500">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={14} fill="currentColor" />
-                    ))}
-                  </div>
-                  <span className="text-[11px] text-gray-400 font-medium">
-                    Média global de estrelas
-                  </span>
-                </div>
-              </div>
-
-              {/* Barras de Progresso Fakes */}
-              <div className="flex flex-col gap-2 mt-2 text-xs text-gray-600">
-                {[
-                  { estrelas: "5 estrelas", porcentagem: "82%" },
-                  { estrelas: "4 estrelas", porcentagem: "12%" },
-                  { estrelas: "3 estrelas", porcentagem: "4%" },
-                  { estrelas: "2 estrelas", porcentagem: "1%" },
-                  { estrelas: "1 estrela", porcentagem: "1%" },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <span className="w-16 shrink-0">{item.estrelas}</span>
-                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-amber-500 h-full"
-                        style={{ width: item.porcentagem }}
-                      ></div>
-                    </div>
-                    <span className="w-8 shrink-0 text-right font-medium text-gray-400">
-                      {item.porcentagem}
-                    </span>
-                  </div>
-                ))}
+                <span className="text-[10px] font-medium text-gray-400">Média global de estrelas</span>
               </div>
             </div>
 
-            {/* Listagem de Comentários */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
-              {avaliacoesFakes.map((av) => (
-                <div
-                  key={av.id}
-                  className="border-b border-gray-100 pb-5 last:border-0 flex flex-col gap-2.5"
-                >
-                  {/* Perfil e Nome */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center">
-                      {av.inicial}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-900">
-                        {av.usuario}
-                      </span>
-                      <span className="text-[10px] text-gray-400">{av.data}</span>
-                    </div>
+            <div className="flex flex-col gap-2">
+              {[
+                { estrelas: "5 estrelas", pct: "82%", largura: "w-[82%]" },
+                { estrelas: "4 estrelas", pct: "12%", largura: "w-[12%]" },
+                { estrelas: "3 estrelas", pct: "4%", largura: "w-[4%]" },
+                { estrelas: "2 estrelas", pct: "1%", largura: "w-[1%]" },
+                { estrelas: "1 estrela", pct: "1%", largura: "w-[1%]" },
+              ].map((barra, bIdx) => (
+                <div key={bIdx} className="flex items-center gap-3 text-xs font-medium">
+                  <span className="w-16 text-gray-500 text-[11px]">{barra.estrelas}</span>
+                  <div className="flex-1 h-2 bg-gray-200/70 rounded-full overflow-hidden">
+                    <div className={`h-full bg-amber-500 ${barra.largura} rounded-full`}></div>
                   </div>
-
-                  {/* Estrelas do Comentário */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex text-amber-500">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={12}
-                          fill={i < av.nota ? "currentColor" : "none"}
-                          className={i >= av.nota ? "text-gray-300" : ""}
-                        />
-                      ))}
-                    </div>
-                    <h4 className="text-xs font-bold text-gray-900">
-                      {av.titulo}
-                    </h4>
-                  </div>
-
-                  {/* Texto da avaliação */}
-                  <p className="text-xs text-gray-600 leading-relaxed text-left">
-                    {av.comentario}
-                  </p>
-
-                  {/* Botão de feedback útil */}
-                  <button className="flex items-center gap-1.5 self-start text-[10px] text-gray-400 hover:text-blue-500 font-medium border border-gray-200 hover:border-blue-200 bg-white px-2.5 py-1 rounded-md transition-colors mt-1">
-                    <ThumbsUp size={11} />
-                    <span>Útil ({av.util})</span>
-                  </button>
+                  <span className="w-8 text-right text-gray-400 text-[11px]">{barra.pct}</span>
                 </div>
               ))}
             </div>
           </div>
-        </section>
-      </div>
-    </main>
+
+          <div className="lg:col-span-8 space-y-6">
+            {[
+              {
+                id: 1, usuario: "Carlos Henrique Silva", inicial: "CH", data: "14 de Maio de 2026",
+                titulo: "Excelente custo-benefício e entrega rápida!",
+                comentario: "Produto sensacional, chegou muito antes do prazo estipulado. A bateria dura o dia todo com uso moderado e a tela tem uma fluidez absurda. Recomendo demais!", util: 34
+              },
+              {
+                id: 2, usuario: "Mariana Souza Costa", inicial: "MS", data: "28 de Abril de 2026",
+                titulo: "Muito bom, mas a caixa veio um pouco amassada",
+                comentario: "O aparelho em si é impecável, design lindo e câmeras maravilhosas. Só tirei uma estrela porque a transportadora amassou um pouco o canto da caixa do produto, mas por dentro estava tudo perfeitamente protegido.", util: 12
+              }
+            ].map((av) => (
+              <div key={av.id} className="border-b border-gray-100 pb-6 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-blue-500 text-white font-bold text-xs rounded-full flex items-center justify-center">{av.inicial}</div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-800">{av.usuario}</span>
+                    <span className="text-[10px] text-gray-400">{av.data}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-0.5 text-amber-500">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={11} fill={i < 4 ? "currentColor" : "none"} className={i < 4 ? "" : "text-gray-300"} />)}
+                </div>
+                <p className="text-xs font-bold text-gray-950">{av.titulo}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">{av.comentario}</p>
+                
+                <button className="flex items-center gap-1.5 border border-gray-200 hover:bg-gray-50 text-[10px] font-bold text-gray-500 px-2.5 py-1 rounded-lg w-fit mt-1 cursor-pointer">
+                  <ThumbsUp size={11} />
+                  <span>Útil ({av.util})</span>
+                </button>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+    </div>
   );
 }

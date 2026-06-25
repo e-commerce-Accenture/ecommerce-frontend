@@ -23,7 +23,6 @@ export function Cadastro() {
             }
             
             localStorage.setItem('token', data.token);
-            // Uso o navigate do react-router-dom para mandar de volta pra Home de forma limpa
             navigate('/'); 
         } catch (error) {
             setErro(error.message);

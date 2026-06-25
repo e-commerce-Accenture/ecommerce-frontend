@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, LogOut, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Search, User, LogOut, ShoppingBag, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 export function Header() {
@@ -9,6 +9,9 @@ export function Header() {
     // Pega o termo que já possa estar na URL, senão começa vazio
     const [busca, setBusca] = useState(searchParams.get("busca") || "");
     const isLogged = !!localStorage.getItem('token');
+    
+    // Verifica se o usuário logado é o administrador global
+    const isAdmin = localStorage.getItem('user_email') === 'admin@smartly.com';
     
     // Estado dinâmico para controlar o contador da bolinha vermelha
     const [badgeQtd, setBadgeQtd] = useState(0);
@@ -31,6 +34,13 @@ export function Header() {
             window.removeEventListener('storage', atualizarContadorCarrinho);
         };
     }, []);
+
+    // Função para deslogar o usuário limpando as credenciais locais
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_email');
+        navigate('/login');
+    };
 
     // Função que envia a busca ao apertar Enter
     const handleKeyPress = (e) => {
@@ -73,6 +83,15 @@ export function Header() {
 
                 {/* AÇÕES */}
                 <div className="flex items-center gap-1 md:gap-4 shrink-0">
+                    
+                    {/* Botão de Acesso ao Painel Admin (Apenas Visível para o Admin) */}
+                    {isLogged && isAdmin && (
+                        <Link to="/admin" className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-full transition-colors mr-1" title="Painel de Controle Gerencial">
+                            <ShieldAlert size={14} />
+                            <span className="hidden md:inline">Painel Admin</span>
+                        </Link>
+                    )}
+
                     <Link to="/meus-pedidos" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700" title="Meus Pedidos">
                         <ShoppingBag size={20} className="md:w-6 md:h-6" />
                     </Link>

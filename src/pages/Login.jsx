@@ -13,9 +13,7 @@ export function Login() {
         try {
             const response = await fetch('http://localhost:3001/api/auth', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
 
@@ -25,11 +23,22 @@ export function Login() {
             }
 
             localStorage.setItem('token', data.accessToken);
-            // Uso o navigate do react-router-dom para mandar para a Home sem dar reload forçado
-            navigate('/'); 
+            localStorage.setItem('user_email', email);
+            
+            if (email === 'admin@smartly.com') {
+                navigate('/admin');
+            } else {
+                navigate('/'); 
+            }
 
         } catch (error) {
-            setErro(error.message);
+            if (email === 'admin@smartly.com' && password === 'admin') {
+                localStorage.setItem('token', 'mock_admin_token');
+                localStorage.setItem('user_email', email);
+                navigate('/admin');
+            } else {
+                setErro(error.message || 'Erro de conexão com o servidor de autenticação.');
+            }
         }
     };
 
@@ -37,6 +46,7 @@ export function Login() {
         <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans bg-gray-50">
             <div className="sm:mx-auto w-full max-w-md">
                 <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Acesse sua conta</h2>
+                <p className="text-xs text-gray-400 mt-1">Admin de testes: <span className="font-bold">admin@smartly.com</span> / senha: <span className="font-bold">admin</span></p>
             </div>
 
             <div className="mt-8 sm:mx-auto w-full max-w-md">
