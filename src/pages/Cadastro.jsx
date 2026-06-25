@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Register } from '../services/authService';
 
 export function Cadastro() {
     const [name, setName] = useState('');
@@ -12,19 +13,12 @@ export function Cadastro() {
         event.preventDefault();
         setErro('');
         try {
-            const response = await fetch('http://localhost:3001/api/users/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password }),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message || 'Erro ao criar conta');
-            }
-            
-            localStorage.setItem('token', data.token);
-            navigate('/'); 
+            const data = await Register(name, email, password)
+            console.log("resposta da API:", data);
+            localStorage.setItem('user_email', email    );
+            navigate('/login'); 
         } catch (error) {
+            console.log("erro completo:", error);
             setErro(error.message);
         }
     };
