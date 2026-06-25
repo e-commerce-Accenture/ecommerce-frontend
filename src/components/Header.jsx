@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, LogOut, ShoppingBag, ShieldAlert } from 'lucide-react';
+import { ShoppingCart, Search, User, LogOut, ShoppingBag, ShieldAlert, UserCog } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 export function Header() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    
+
     // Pega o termo que já possa estar na URL, senão começa vazio
     const [busca, setBusca] = useState(searchParams.get("busca") || "");
     const isLogged = !!localStorage.getItem('token');
-    
+
     // Verifica se o usuário logado é o administrador global
     const isAdmin = localStorage.getItem('user_email') === 'admin@smartly.com';
-    
+
     // Estado dinâmico para controlar o contador da bolinha vermelha
     const [badgeQtd, setBadgeQtd] = useState(0);
 
@@ -74,8 +74,8 @@ export function Header() {
                         onKeyDown={handleKeyPress}
                         className="w-full bg-gray-100 border-none rounded-full py-2 md:py-2.5 pl-4 pr-9 focus:ring-2 focus:ring-indigo-500 outline-none text-xs md:text-sm"
                     />
-                    <Search 
-                        size={16} 
+                    <Search
+                        size={16}
                         className="absolute right-3 top-2.5 md:top-3 text-gray-400 cursor-pointer hover:text-indigo-600 transition-colors"
                         onClick={() => navigate(busca.trim() ? `/produtos?busca=${encodeURIComponent(busca.trim())}` : '/produtos')}
                     />
@@ -83,7 +83,7 @@ export function Header() {
 
                 {/* AÇÕES */}
                 <div className="flex items-center gap-1 md:gap-4 shrink-0">
-                    
+
                     {/* Botão de Acesso ao Painel Admin (Apenas Visível para o Admin) */}
                     {isLogged && isAdmin && (
                         <Link to="/admin" className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-full transition-colors mr-1" title="Painel de Controle Gerencial">
@@ -95,6 +95,13 @@ export function Header() {
                     <Link to="/meus-pedidos" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700" title="Meus Pedidos">
                         <ShoppingBag size={20} className="md:w-6 md:h-6" />
                     </Link>
+
+                    {/* Botão de Perfil que criei */}
+                    {isLogged && (
+                        <Link to="/perfil" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-700" title="Meu Perfil">
+                            <UserCog size={20} className="md:w-6 md:h-6" />
+                        </Link>
+                    )}
 
                     {/* REDIRECIONAMENTO DO CARRINHO COM BADGE REAL E TOTALIZADO */}
                     <Link to="/carrinho" className="relative p-2 hover:bg-gray-100 rounded-full transition-colors" title="Meu Carrinho">

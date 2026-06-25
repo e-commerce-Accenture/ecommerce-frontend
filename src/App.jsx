@@ -14,6 +14,7 @@ import AdminPage from './pages/AdminPage';
 import MeusPedidosPage from './pages/MeusPedidosPage';
 import RastreioPage from './pages/RastreioPage';
 import CarrinhoPage from './pages/CarrinhoPage';
+import PerfilPage from './pages/PerfilPage';
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/checkout" element={<><Header /><CheckoutPage /></>} />
           <Route path="/meus-pedidos" element={<><Header /><MeusPedidosPage /></>} />
           <Route path="/rastreio" element={<><Header /><RastreioPage /></>} />
+          <Route path="/perfil" element={<><Header /><PerfilPage /></>} />
           <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </div>
