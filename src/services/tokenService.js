@@ -6,7 +6,7 @@
  */
 
 const COOKIE_NAME = 'auth_token';
-const COOKIE_MAX_AGE = 60 * 60; // 1 hora em segundos
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias em segundos
 
 export function setToken(token) {
     // path=/ → válido em todas as rotas

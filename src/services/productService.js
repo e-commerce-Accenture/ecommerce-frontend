@@ -31,6 +31,22 @@ export function mapApiProductToLocal(apiProd) {
         marca: apiProd.brand || "Generico",
         descricao: apiProd.description || `Explore novas possibilidades com o ${apiProd.name || "produto"}.`,
         especificacoes: (() => {
+            const apiSpecs = {};
+            const rawAttrs = apiProd.attributes || apiProd.specifications || apiProd.especificacoes;
+            if (Array.isArray(rawAttrs)) {
+                rawAttrs.forEach(attr => {
+                    const title = attr.title || attr.name || attr.chave || attr.key;
+                    const val = attr.value || attr.valor;
+                    if (title) apiSpecs[title] = val;
+                });
+            } else if (rawAttrs && typeof rawAttrs === 'object') {
+                Object.entries(rawAttrs).forEach(([k, v]) => {
+                    apiSpecs[k] = v;
+                });
+            }
+            if (Object.keys(apiSpecs).length > 0) {
+                return apiSpecs;
+            }
             try {
                 const saved = localStorage.getItem(`prod_specs_${apiProd.id}`);
                 return saved ? JSON.parse(saved) : { Marca: apiProd.brand || "Generico" };
@@ -114,9 +130,17 @@ export async function createProduct(localProductData) {
     const prodId = mapped.id;
 
     if (localProductData.especificacoes) {
-        // especificacoes não é campo da API — salvar no localStorage
         localStorage.setItem(`prod_specs_${prodId}`, JSON.stringify(localProductData.especificacoes));
         mapped.especificacoes = localProductData.especificacoes;
+        (async () => {
+            try {
+                for (const [title, value] of Object.entries(localProductData.especificacoes)) {
+                    await addProductAttribute(prodId, title, value);
+                }
+            } catch (e) {
+                console.error("Erro ao sincronizar especificações ao criar produto:", e);
+            }
+        })();
     }
 
     window.dispatchEvent(new Event("storage"));
@@ -157,6 +181,15 @@ export async function updateProduct(id, localProductData) {
     if (localProductData.especificacoes !== undefined) {
         localStorage.setItem(`prod_specs_${id}`, JSON.stringify(localProductData.especificacoes));
         mapped.especificacoes = localProductData.especificacoes;
+        (async () => {
+            try {
+                for (const [title, value] of Object.entries(localProductData.especificacoes)) {
+                    await addProductAttribute(id, title, value);
+                }
+            } catch (e) {
+                console.error("Erro ao sincronizar especificações ao atualizar produto:", e);
+            }
+        })();
     }
 
     window.dispatchEvent(new Event("storage"));
