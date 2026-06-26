@@ -9,17 +9,28 @@ export function Cadastro() {
     const [erro, setErro] = useState('');
     const navigate = useNavigate();
 
+    const hasMinLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+
     const handleRegister = async (event) => {
         event.preventDefault();
         setErro('');
+
+        if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecialChar) {
+            setErro('A senha não atende a todos os requisitos de segurança.');
+            return;
+        }
+
         try {
-            const data = await Register(name, email, password)
+            const data = await Register(name, email, password);
             console.log("resposta da API:", data);
-            localStorage.setItem('user_email', email    );
+            localStorage.setItem('user_email', email);
             navigate('/login'); 
         } catch (error) {
-            console.log("erro completo:", error);
-            setErro(error.message);
+            console.error("Erro completo no cadastro:", error);
+            setErro(error.message || 'Erro de conexão com o servidor de autenticação.');
         }
     };
 
@@ -53,6 +64,31 @@ export function Cadastro() {
                             <div className="mt-1">
                                 <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 sm:text-sm" />
                             </div>
+                            {password && (
+                                <div className="mt-2.5 text-xs space-y-1 text-left">
+                                    <p className="font-semibold text-gray-500 mb-1.5">A senha deve conter:</p>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={hasMinLength ? "text-green-600 font-bold" : "text-gray-400"}>
+                                            {hasMinLength ? "✓" : "○"} Mínimo de 8 caracteres
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={hasUppercase ? "text-green-600 font-bold" : "text-gray-400"}>
+                                            {hasUppercase ? "✓" : "○"} Pelo menos uma letra maiúscula
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={hasNumber ? "text-green-600 font-bold" : "text-gray-400"}>
+                                            {hasNumber ? "✓" : "○"} Pelo menos um número
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className={hasSpecialChar ? "text-green-600 font-bold" : "text-gray-400"}>
+                                            {hasSpecialChar ? "✓" : "○"} Pelo menos um caractere especial (Ex: @, #, $, etc.)
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div>

@@ -4,28 +4,32 @@ import Section1 from './Section1';
 import Section2 from './Section2';
 import Section3 from './Section3';
 
-import banner1 from '../assets/main-banner/banner1.png';
-import banner2 from '../assets/main-banner/banner2.png';
-import banner3 from '../assets/main-banner/banner3.png';
+import { getBanners } from '../services/bannerService';
 
 export function Main() {
     const [slideAtivo, setSlideAtivo] = useState(0);
     const [estaPausado, setEstaPausado] = useState(false);
-    const [listaBanners, setListaBanners] = useState([banner1, banner2, banner3]);
+    const [listaBanners, setListaBanners] = useState([]);
+    const [carregando, setCarregando] = useState(true);
     
     useEffect(() => {
-        const synchBanners = () => {
-            const salvos = JSON.parse(localStorage.getItem('banners_principais'));
-            if (salvos && salvos.length > 0) {
-                setListaBanners(salvos);
-            } else {
-                setListaBanners([banner1, banner2, banner3]);
-            }
+        const carregarBanners = () => {
+            getBanners()
+                .then(data => {
+                    const ativos = (data.main || []).filter(Boolean);
+                    setListaBanners(ativos);
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar banners principais:", err);
+                })
+                .finally(() => {
+                    setCarregando(false);
+                });
         };
 
-        synchBanners();
-        window.addEventListener('storage', synchBanners);
-        return () => window.removeEventListener('storage', synchBanners);
+        carregarBanners();
+        window.addEventListener('storage', carregarBanners);
+        return () => window.removeEventListener('storage', carregarBanners);
     }, []);
 
     const totalSlides = listaBanners.length;
@@ -44,7 +48,7 @@ export function Main() {
             <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
 
                 <section 
-                    className="relative rounded-3xl overflow-hidden shadow-xl w-full bg-[#111625]"
+                    className="relative rounded-3xl overflow-hidden shadow-xl w-full bg-[#111625] aspect-[2.7/1] sm:aspect-[3/1]"
                     onMouseEnter={() => setEstaPausado(true)}
                     onMouseLeave={() => setEstaPausado(false)}
                 >
@@ -53,25 +57,40 @@ export function Main() {
                             onClick={() => setSlideAtivo(prev => (prev === 0 ? totalSlides - 1 : prev - 1))}
                             className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-1.5 md:p-2 rounded-full backdrop-blur-sm z-20 transition-all"
                         >
-                            <ChevronLeft size={20} />
-                        </button>
+                            <ChevronLeft size={20} />
+                        </button>
                     )}
 
-                    <div className="w-full h-full flex items-center justify-center">
-                        <img 
-                            src={listaBanners[slideAtivo]} 
-                            alt={`Banner promocional ${slideAtivo + 1}`} 
-                            className="w-full h-auto max-h-[450px] object-cover block select-none"
-                        />
-                    </div>
+                    <div className="w-full h-full">
+                        {carregando ? (
+                            <div className="w-full h-full flex justify-center items-center bg-[#111625]">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                            </div>
+                        ) : listaBanners.length === 0 ? (
+                            <div className="w-full h-full flex flex-col justify-center items-center bg-gradient-to-r from-indigo-950 via-slate-900 to-blue-950 text-white p-8 text-center select-none">
+                                <h1 className="text-xl md:text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-300">
+                                    NEXTGEN E-COMMERCE
+                                </h1>
+                                <p className="text-xs md:text-sm text-gray-400 mt-2 max-w-md font-medium">
+                                    Conecte seus banners no painel administrativo para personalizar o carrossel.
+                                </p>
+                            </div>
+                        ) : (
+                            <img 
+                                src={listaBanners[slideAtivo]} 
+                                alt={`Banner promocional ${slideAtivo + 1}`} 
+                                className="w-full h-full object-cover block select-none"
+                            />
+                        )}
+                    </div>
                     
                     {totalSlides > 1 && (
                         <button 
                             onClick={() => setSlideAtivo(prev => (prev === totalSlides - 1 ? 0 : prev + 1))}
                             className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-1.5 md:p-2 rounded-full backdrop-blur-sm z-20 transition-all"
                         >
-                            <ChevronRight size={20} />
-                        </button>
+                            <ChevronRight size={20} />
+                        </button>
                     )}
 
                     {totalSlides > 1 && (
@@ -81,17 +100,17 @@ export function Main() {
                                     key={i}
                                     onClick={() => setSlideAtivo(i)}
                                     className={`transition-all duration-300 rounded-full ${slideAtivo === i ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40'}`}
-                                />
+                                />
                             ))}
-                        </div>
+                        </div>
                     )}
-                </section>
+                </section>
 
                 <Section1 />
                 <Section2 />
                 <Section3 />
 
-            </div>
-        </main>
+            </div>
+        </main>
     );
 }

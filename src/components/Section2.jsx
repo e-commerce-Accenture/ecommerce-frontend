@@ -4,8 +4,8 @@ import Cat2 from "../assets/category/image 5.png";
 import Cat3 from "../assets/category/image 6.png";
 
 const categorias = [
-  { id: 1, nome: "Mobile", slug: "Mobile", imagem: Cat1 },
-  { id: 5, nome: "Watches", slug: "Watches", imagem: Cat2 },
+  { id: 1, nome: "SmartPhone", slug: "SmartPhone", imagem: Cat1 },
+  { id: 5, nome: "SmartWatch", slug: "SmartWatch", imagem: Cat2 },
   { id: 7, nome: "Accessories", slug: "Accessories", imagem: Cat3 },
 ];
 
@@ -17,9 +17,9 @@ export default function Section2() {
           Compre nas{" "}
           <span className="text-blue-500 font-semibold">
             principais categorias
-          </span>
-        </h2>
-      </div>
+          </span>
+        </h2>
+      </div>
 
       <div className="flex flex-wrap justify-center items-center mt-2 gap-4 sm:gap-6">
         {categorias.slice(0, 10).map((categoria) => (
@@ -33,14 +33,14 @@ export default function Section2() {
                 src={categoria.imagem}
                 alt={categoria.nome}
                 className="w-16 h-16 object-contain transition-transform group-hover:scale-105"
-              />
-            </div>
+              />
+            </div>
             <p className="text-sm mt-2 text-gray-700 group-hover:text-blue-500 font-medium transition-colors">
               {categoria.nome}
-            </p>
-          </Link>
+            </p>
+          </Link>
         ))}
-      </div>
-    </section>
+      </div>
+    </section>
   );
 }
