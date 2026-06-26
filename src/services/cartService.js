@@ -1,4 +1,4 @@
-import { getToken, isAuthenticated as isLoggedIn } from './tokenService';
+import { getToken, removeToken, isAuthenticated as isLoggedIn } from './tokenService';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -31,6 +31,13 @@ async function apiRequest(path, method = 'GET', body = null) {
     };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(`${API_URL}${path}`, opts);
+    if (res.status === 403) {
+        removeToken();
+        window.dispatchEvent(new Event("storage"));
+        window.dispatchEvent(new CustomEvent("authChange"));
+        window.dispatchEvent(new CustomEvent("cartChange"));
+        throw new Error("Sua sessão expirou. Por favor, faça login novamente.");
+    }
     const text = await res.text();
     const json = text ? JSON.parse(text) : {};
     if (!res.ok) throw new Error(json.message || json.error || `Erro ${res.status}`);
@@ -55,8 +62,9 @@ export async function getCart() {
     }
 
     const data = await apiRequest('/cart');
-    // data pode ser { items: [...] } ou diretamente um array
-    const items = Array.isArray(data) ? data : (data.items || data.cart || []);
+    const items = Array.isArray(data) 
+        ? data 
+        : (data.items || data.cart || data.data || data.cartItems || []);
     return items;
 }
 
@@ -74,6 +82,31 @@ export async function addToCart(productId, quantity = 1) {
         }
         setLocalCart(cart);
         return { productId, quantity };
+    }
+
+    try {
+        const cartItems = await getCart();
+        const existing = cartItems.find(item => {
+            if (!item) return false;
+            const pId = item.productId || 
+                        item.product_id || 
+                        (item.product && (item.product.id || item.product.productId)) ||
+                        item.id;
+            return pId === productId;
+        });
+
+        if (existing) {
+            const itemId = existing.cartItemId || 
+                           existing.productId || 
+                           existing.id;
+            if (itemId) {
+                const currentQty = Number(existing.quantity || existing.quantidade || existing.qty || 0);
+                const newQty = currentQty + quantity;
+                return await updateCartItem(itemId, newQty);
+            }
+        }
+    } catch (e) {
+        // Fallback: se falhar a checagem prévia, prossegue com o fluxo POST normal
     }
 
     return apiRequest('/cart', 'POST', { productId, quantity });
