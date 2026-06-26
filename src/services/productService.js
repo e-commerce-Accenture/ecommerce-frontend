@@ -36,7 +36,7 @@ export function mapApiProductToLocal(apiProd) {
             if (Array.isArray(rawAttrs)) {
                 rawAttrs.forEach(attr => {
                     const title = attr.title || attr.name || attr.chave || attr.key;
-                    const val = attr.value || attr.valor;
+                    const val = attr.value || attr.valor || attr.paragraph;
                     if (title) apiSpecs[title] = val;
                 });
             } else if (rawAttrs && typeof rawAttrs === 'object') {
@@ -217,19 +217,26 @@ export async function deleteProduct(id) {
 
 // POST /products/:id/attributes
 export async function addProductAttribute(id, title, value) {
-    // Graceful wrapper, returns locally saved object structure to remain functional
     try {
+        const payload = {
+            title,
+            paragraph: value
+        };
         const res = await fetch(`${API_URL}/products/${id}/attributes`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${getToken()}`
             },
-            body: JSON.stringify({ title, value })
+            body: JSON.stringify(payload)
         });
         if (res.ok) {
             const data = await res.json();
             return data;
+        } else {
+            const errText = await res.text();
+            console.error(`❌ addProductAttribute failed with status ${res.status}:`, errText);
+            alert(`Erro do Servidor ao salvar atributo (Status ${res.status}):\n${errText}`);
         }
     } catch (e) {
         console.warn("Failed to persist attribute on API. Saving locally.", e);
