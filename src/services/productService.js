@@ -132,15 +132,13 @@ export async function createProduct(localProductData) {
     if (localProductData.especificacoes) {
         localStorage.setItem(`prod_specs_${prodId}`, JSON.stringify(localProductData.especificacoes));
         mapped.especificacoes = localProductData.especificacoes;
-        (async () => {
-            try {
-                for (const [title, value] of Object.entries(localProductData.especificacoes)) {
-                    await addProductAttribute(prodId, title, value);
-                }
-            } catch (e) {
-                console.error("Erro ao sincronizar especificações ao criar produto:", e);
+        try {
+            for (const [title, value] of Object.entries(localProductData.especificacoes)) {
+                await addProductAttribute(prodId, title, value);
             }
-        })();
+        } catch (e) {
+            console.error("Erro ao sincronizar especificações ao criar produto:", e);
+        }
     }
 
     window.dispatchEvent(new Event("storage"));
@@ -181,15 +179,13 @@ export async function updateProduct(id, localProductData) {
     if (localProductData.especificacoes !== undefined) {
         localStorage.setItem(`prod_specs_${id}`, JSON.stringify(localProductData.especificacoes));
         mapped.especificacoes = localProductData.especificacoes;
-        (async () => {
-            try {
-                for (const [title, value] of Object.entries(localProductData.especificacoes)) {
-                    await addProductAttribute(id, title, value);
-                }
-            } catch (e) {
-                console.error("Erro ao sincronizar especificações ao atualizar produto:", e);
+        try {
+            for (const [title, value] of Object.entries(localProductData.especificacoes)) {
+                await addProductAttribute(id, title, value);
             }
-        })();
+        } catch (e) {
+            console.error("Erro ao sincronizar especificações ao atualizar produto:", e);
+        }
     }
 
     window.dispatchEvent(new Event("storage"));
